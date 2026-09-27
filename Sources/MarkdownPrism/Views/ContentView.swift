@@ -98,7 +98,7 @@ struct ContentView: View {
                 Button(action: { showEditor.toggle() }) {
                     Label(
                         showEditor ? "Hide Editor" : "Show Editor",
-                        systemImage: showEditor ? "sidebar.left" : "pencil"
+                        systemImage: showEditor ? "eye" : "pencil"
                         /* systemImage: showEditor ? "rectangle.lefthalf.filled" : "rectangle.split.2x1" */
                     )
                 }
