@@ -84,22 +84,22 @@ struct ContentView: View {
         }
     }
 
-    private var diffMenu: some View {
-        Menu {
-            Picker("Compare With", selection: baselineBinding) {
-                ForEach(DiffBaseline.allCases) { baseline in
-                    Text(baseline.label).tag(baseline)
-                }
-            }
-            .pickerStyle(.inline)
-        } label: {
-            Label(
-                "Show Changes",
-                systemImage: diff.baseline.isShowingChanges ? "plusminus.circle.fill" : "plusminus.circle"
-            )
-        }
-        .help("Show changes against Git")
-    }
+    /* private var diffMenu: some View { */
+    /*     Menu { */
+    /*         Picker("Compare With", selection: baselineBinding) { */
+    /*             ForEach(DiffBaseline.allCases) { baseline in */
+    /*                 Text(baseline.label).tag(baseline) */
+    /*             } */
+    /*         } */
+    /*         .pickerStyle(.inline) */
+    /*     } label: { */
+    /*         Label( */
+    /*             "Show Changes", */
+    /*             systemImage: diff.baseline.isShowingChanges ? "plusminus.circle.fill" : "plusminus.circle" */
+    /*         ) */
+    /*     } */
+    /*     .help("Show changes against Git") */
+    /* } */
 
     private var innerBody: some View {
         VStack(spacing: 0) {
@@ -118,14 +118,15 @@ struct ContentView: View {
                 Button(action: { showEditor.toggle() }) {
                     Label(
                         showEditor ? "Hide Editor" : "Show Editor",
-                        systemImage: showEditor ? "rectangle.lefthalf.filled" : "rectangle.split.2x1"
+                        systemImage: showEditor ? "sidebar.left" : "pencil"
+                        /* systemImage: showEditor ? "rectangle.lefthalf.filled" : "rectangle.split.2x1" */
                     )
                 }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
             }
-            ToolbarItem(placement: .automatic) {
-                diffMenu
-            }
+            /* ToolbarItem(placement: .automatic) { */
+            /*     diffMenu */
+            /* } */
             ToolbarItem(placement: .automatic) {
                 Button(action: { useFullWidth.toggle() }) {
                     Label(

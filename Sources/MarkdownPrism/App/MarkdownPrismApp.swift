@@ -93,15 +93,15 @@ struct EditorCommands: Commands {
 
     var body: some Commands {
         CommandGroup(after: .toolbar) {
-            Menu("Show Changes") {
-                Picker("Compare With", selection: baselineBinding) {
-                    ForEach(DiffBaseline.allCases) { baseline in
-                        Text(baseline.label).tag(baseline)
-                    }
-                }
-                .pickerStyle(.inline)
-            }
-            .disabled(diffCommand == nil)
+            /* Menu("Show Changes") { */
+            /*     Picker("Compare With", selection: baselineBinding) { */
+            /*         ForEach(DiffBaseline.allCases) { baseline in */
+            /*             Text(baseline.label).tag(baseline) */
+            /*         } */
+            /*     } */
+            /*     .pickerStyle(.inline) */
+            /* } */
+            /* .disabled(diffCommand == nil) */
 
             // The one comparison worth a shortcut: what changed since the last
             // commit, which is what someone reviewing an agent's edits wants.
