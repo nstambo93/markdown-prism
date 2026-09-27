@@ -105,20 +105,6 @@ struct ContentView: View {
                 .keyboardShortcut("e", modifiers: [.command, .shift])
             }
             ToolbarItem(placement: .automatic) {
-                Button(action: {
-                    columnVisibility = (columnVisibility == .detailOnly) ? .all : .detailOnly
-                }) {
-                    Label(
-                        columnVisibility == .detailOnly ? "Show Outline" : "Hide Outline",
-                        systemImage: "list.bullet.indent"
-                    )
-                }
-                .keyboardShortcut("t", modifiers: [.command, .shift])
-            }
-            /* ToolbarItem(placement: .automatic) { */
-            /*     diffMenu */
-            /* } */
-            ToolbarItem(placement: .automatic) {
                 Button(action: { useFullWidth.toggle() }) {
                     Label(
                         useFullWidth ? "Fixed Width" : "Full Width",
