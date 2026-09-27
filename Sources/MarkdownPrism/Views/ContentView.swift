@@ -13,6 +13,10 @@ struct ContentView: View {
     @State private var scrollSync = ScrollSyncBus()
     @State private var fileWatcher: FileWatcher?
     @State private var showEditor = false
+    @State private var tocItems: [TOCItem] = []
+    @State private var showTOC = true
+    @State private var selectedTOCItem: String?
+    @State private var pendingScrollToID: String?
     @State private var debounceWork: DispatchWorkItem?
     @State private var isSearchVisible = false
     @State private var searchText = ""
@@ -59,10 +63,26 @@ struct ContentView: View {
         }
     }
 
+    @ViewBuilder
+    private var tocSidebar: some View {
+        if showTOC && !tocItems.isEmpty {
+            List(selection: $selectedTOCItem) {
+                ForEach(tocItems) { item in
+                    Text(item.text)
+                        .font(.system(size: 13, weight: item.level == 1 ? .semibold : .regular))
+                        .padding(.leading, CGFloat((item.level - 1) * 12))
+                        .tag(item.id)
+                }
+            }
+            .listStyle(.sidebar)
+            .frame(minWidth: 160, idealWidth: 200, maxWidth: 280)
+        }
+    }
     private var innerBody: some View {
         VStack(spacing: 0) {
             findBar
             HSplitView {
+                tocSidebar
                 if showEditor {
                     editorPane
                 }
@@ -80,6 +100,15 @@ struct ContentView: View {
                     )
                 }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
+            }
+            ToolbarItem(placement: .automatic) {
+                Button(action: { showTOC.toggle() }) {
+                    Label(
+                        showTOC ? "Hide Outline" : "Show Outline",
+                        systemImage: "list.bullet.indent"
+                    )
+                }
+                .keyboardShortcut("t", modifiers: [.command, .shift])
             }
             /* ToolbarItem(placement: .automatic) { */
             /*     diffMenu */
@@ -120,6 +149,9 @@ struct ContentView: View {
         .onChange(of: showEditor) {
             // Nothing to follow along with while the editor is hidden.
             updateScrollSyncEnabled()
+        }
+        .onChange(of: selectedTOCItem) { _, newValue in
+            pendingScrollToID = newValue
         }
         .onChange(of: diff.state) {
             updateScrollSyncEnabled()
@@ -200,7 +232,11 @@ struct ContentView: View {
             onChangesCounted: { count, current in
                 changeCount = count
                 currentChange = current
-            }
+            },
+            onTOCReceived: { items in
+                tocItems = items
+            },
+            pendingScrollToID: pendingScrollToID
         )
         .frame(minWidth: 300)
     }

@@ -268,6 +268,34 @@ document.addEventListener('DOMContentLoaded', function () {
     return summary;
   }
 
+  function extractTOC() {
+    var headings = [];
+    var content = document.getElementById('content');
+    if (!content) return headings;
+
+    var nodes = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (!node.id) continue; // Skip headings without an id
+      headings.push({
+        level: parseInt(node.tagName.substring(1), 10),
+        id: node.id,
+        text: node.textContent.trim()
+      });
+    }
+    return headings;
+  }
+
+  window.scrollToHeading = function(id) {
+    var element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Expose it alongside your other window functions
+  window.getTOC = extractTOC;
+
   window.renderMarkdown = renderMarkdown;
   window.renderDiff = renderDiff;
 

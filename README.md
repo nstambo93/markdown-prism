@@ -119,6 +119,18 @@ are generated from it.
 | Sanitiser | DOMPurify |
 | Quick Look | QLPreviewingController + WKWebView |
 
+## Fork Notes
+
+This is a personal fork of [hulryung/markdown-prism](https://github.com/hulryung/markdown-prism).
+
+Changes from upstream:
+- Default to preview-only mode
+- Pencil icon for editor toggle
+- Removed diff/Git UI
+- LaTeX toggle in Settings
+
+Development notes: [docs/quick-look-rebuild.md](docs/quick-look-rebuild.md)
+
 ## License
 
 [MIT](LICENSE).

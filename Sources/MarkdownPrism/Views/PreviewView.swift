@@ -1,6 +1,12 @@
 import SwiftUI
 import WebKit
 
+struct TOCItem: Identifiable {
+    let id: String
+    let level: Int
+    let text: String
+}
+
 struct PreviewView: NSViewRepresentable {
     let markdown: String
     /// The version to mark `markdown`'s changes against, or nil to render it
@@ -22,6 +28,8 @@ struct PreviewView: NSViewRepresentable {
     var onOpenFile: ((URL) -> Void)?
     var onSearchResults: ((Int, Int) -> Void)?
     var onChangesCounted: ((Int, Int) -> Void)?
+    var onTOCReceived: (([TOCItem]) -> Void)?
+    var pendingScrollToID: String?
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -50,6 +58,8 @@ struct PreviewView: NSViewRepresentable {
         context.coordinator.onChangesCounted = onChangesCounted
         context.coordinator.pendingChangeRevision = changeRevision
         context.coordinator.bind(to: scrollSync)
+        context.coordinator.onTOCReceived = onTOCReceived
+        context.coordinator.pendingScrollToID = pendingScrollToID
 
         let templateURL: URL? = {
             #if SWIFT_PACKAGE
@@ -90,6 +100,7 @@ struct PreviewView: NSViewRepresentable {
         c.onOpenFile = onOpenFile
         c.onSearchResults = onSearchResults
         c.onChangesCounted = onChangesCounted
+        c.pendingScrollToID = pendingScrollToID
         c.bind(to: scrollSync)
         if c.isLoaded {
             c.sync()
@@ -120,6 +131,9 @@ struct PreviewView: NSViewRepresentable {
         var onOpenFile: ((URL) -> Void)?
         var onSearchResults: ((Int, Int) -> Void)?
         var onChangesCounted: ((Int, Int) -> Void)?
+        var onTOCReceived: (([TOCItem]) -> Void)?
+        var pendingScrollToID: String?
+        private var appliedScrollToID: String?
         var pendingChangeRevision = 0
         private var appliedChangeRevision = 0
         private weak var scrollSync: ScrollSyncBus?
@@ -188,6 +202,7 @@ struct PreviewView: NSViewRepresentable {
             }
             searchIfNeeded()
             navigateChangesIfNeeded()
+            applyScrollIfNeeded()
         }
 
         private func navigateChangesIfNeeded() {
@@ -221,6 +236,16 @@ struct PreviewView: NSViewRepresentable {
             guard pendingLatexEnabled != appliedLatexEnabled else { return }
             appliedLatexEnabled = pendingLatexEnabled
             webView.evaluateJavaScript("window.setLatexEnabled(\(pendingLatexEnabled));") { _, _ in }
+        }
+
+        private func applyScrollIfNeeded() {
+            guard let webView else { return }
+            guard pendingScrollToID != appliedScrollToID else { return }
+            appliedScrollToID = pendingScrollToID
+            guard let id = pendingScrollToID else { return }
+            guard let encoded = try? JSONEncoder().encode(id),
+                  let json = String(data: encoded, encoding: .utf8) else { return }
+            webView.evaluateJavaScript("window.scrollToHeading(\(json));") { _, _ in }
         }
 
         private func applyTypographyIfNeeded() {
@@ -260,6 +285,7 @@ struct PreviewView: NSViewRepresentable {
             webView.evaluateJavaScript(script) { [weak self] result, error in
                 if let error { print("render error: \(error.localizedDescription)") }
                 self?.handleChangeSummary(result)
+                self?.fetchTOC()
             }
             renderedMarkdown = currentMarkdown
             renderedBaseline = currentBaseline
@@ -316,6 +342,22 @@ struct PreviewView: NSViewRepresentable {
                 DispatchQueue.main.async { self.onOpenFile?(url) }
             case nil:
                 break
+            }
+        }
+
+        func fetchTOC() {
+            guard isLoaded, let webView else { return }
+            webView.evaluateJavaScript("window.getTOC();") { [weak self] result, _ in
+                guard let array = result as? [[String: Any]] else { return }
+                let items = array.compactMap { dict -> TOCItem? in
+                    guard let id = dict["id"] as? String,
+                          let level = dict["level"] as? Int,
+                          let text = dict["text"] as? String else { return nil }
+                    return TOCItem(id: id, level: level, text: text)
+                }
+                DispatchQueue.main.async {
+                    self?.onTOCReceived?(items)
+                }
             }
         }
     }
