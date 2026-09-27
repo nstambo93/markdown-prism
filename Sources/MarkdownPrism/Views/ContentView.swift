@@ -41,6 +41,9 @@ struct ContentView: View {
             .focusedSceneValue(\.findPreviousAction, isSearchVisible ? { findPrevious() } : nil)
             .focusedSceneValue(\.dismissFindAction, isSearchVisible ? { dismissSearch() } : nil)
             .focusedSceneValue(\.showReplaceAction, { showReplace() })
+            .focusedSceneValue(\.toggleOutlineAction, {
+                columnVisibility = (columnVisibility == .detailOnly) ? .all : .detailOnly
+            })
     }
 
     @ViewBuilder
@@ -390,6 +393,10 @@ struct ContentView: View {
 
 // MARK: - Focused Values for Menu Commands
 
+private struct ToggleOutlineActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+
 private struct ZoomInActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
@@ -423,6 +430,11 @@ private struct ShowReplaceActionKey: FocusedValueKey {
 }
 
 extension FocusedValues {
+
+    var toggleOutlineAction: (() -> Void)? {
+        get { self[ToggleOutlineActionKey.self] }
+        set { self[ToggleOutlineActionKey.self] = newValue }
+    }
 
     var zoomInAction: (() -> Void)? {
         get { self[ZoomInActionKey.self] }

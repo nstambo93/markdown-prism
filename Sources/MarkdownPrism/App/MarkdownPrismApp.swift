@@ -87,6 +87,7 @@ struct EditorCommands: Commands {
     @FocusedValue(\.findPreviousAction) var findPreviousAction
     @FocusedValue(\.dismissFindAction) var dismissFindAction
     @FocusedValue(\.showReplaceAction) var showReplaceAction
+    @FocusedValue(\.toggleOutlineAction) var toggleOutlineAction
 
     var body: some Commands {
         CommandGroup(after: .toolbar) {
@@ -139,6 +140,11 @@ struct EditorCommands: Commands {
             }
             .keyboardShortcut(.escape, modifiers: [])
             .disabled(dismissFindAction == nil)
+
+            Button("Toggle Outline") {
+                toggleOutlineAction?()
+            }
+            .keyboardShortcut("t", modifiers: [.command, .shift])
         }
     }
 
