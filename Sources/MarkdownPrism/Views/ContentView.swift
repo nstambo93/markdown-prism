@@ -12,7 +12,7 @@ struct ContentView: View {
     @State private var previewText = ""
     @State private var scrollSync = ScrollSyncBus()
     @State private var fileWatcher: FileWatcher?
-    @State private var showEditor = true
+    @State private var showEditor = false
     @State private var debounceWork: DispatchWorkItem?
     @State private var isSearchVisible = false
     @State private var searchText = ""
