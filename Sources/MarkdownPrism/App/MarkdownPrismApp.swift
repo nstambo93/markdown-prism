@@ -79,9 +79,6 @@ struct MarkdownPrismApp: App {
 }
 
 struct EditorCommands: Commands {
-    @FocusedValue(\.diffCommand) var diffCommand
-    @FocusedValue(\.nextChangeAction) var nextChangeAction
-    @FocusedValue(\.previousChangeAction) var previousChangeAction
     @FocusedValue(\.zoomInAction) var zoomInAction
     @FocusedValue(\.zoomOutAction) var zoomOutAction
     @FocusedValue(\.resetZoomAction) var resetZoomAction
@@ -92,43 +89,6 @@ struct EditorCommands: Commands {
     @FocusedValue(\.showReplaceAction) var showReplaceAction
 
     var body: some Commands {
-        CommandGroup(after: .toolbar) {
-            /* Menu("Show Changes") { */
-            /*     Picker("Compare With", selection: baselineBinding) { */
-            /*         ForEach(DiffBaseline.allCases) { baseline in */
-            /*             Text(baseline.label).tag(baseline) */
-            /*         } */
-            /*     } */
-            /*     .pickerStyle(.inline) */
-            /* } */
-            /* .disabled(diffCommand == nil) */
-
-            // The one comparison worth a shortcut: what changed since the last
-            // commit, which is what someone reviewing an agent's edits wants.
-            Button("Show Changes Since Last Commit") {
-                guard let diffCommand else { return }
-                diffCommand.select(diffCommand.current == .lastCommit ? .off : .lastCommit)
-            }
-            .keyboardShortcut("d", modifiers: [.command, .shift])
-            .disabled(diffCommand == nil)
-
-            // Stepping between changes is what makes a long document readable;
-            // both are disabled unless there is something to step through.
-            Button("Next Change") {
-                nextChangeAction?()
-            }
-            .keyboardShortcut(.downArrow, modifiers: [.command, .option])
-            .disabled(nextChangeAction == nil)
-
-            Button("Previous Change") {
-                previousChangeAction?()
-            }
-            .keyboardShortcut(.upArrow, modifiers: [.command, .option])
-            .disabled(previousChangeAction == nil)
-
-            Divider()
-        }
-
         CommandGroup(after: .toolbar) {
             Button("Zoom In") {
                 zoomInAction?()
@@ -182,12 +142,4 @@ struct EditorCommands: Commands {
         }
     }
 
-    /// Reads and writes the focused window's comparison. With no document
-    /// focused the menu is disabled, so the setter has nothing to reach.
-    private var baselineBinding: Binding<DiffBaseline> {
-        Binding(
-            get: { diffCommand?.current ?? .off },
-            set: { diffCommand?.select($0) }
-        )
-    }
 }

@@ -31,12 +31,6 @@ struct ContentView: View {
 
     var body: some View {
         innerBody
-            .focusedSceneValue(
-                \.diffCommand,
-                DiffCommand(current: diff.baseline, select: { selectBaseline($0) })
-            )
-            .focusedSceneValue(\.nextChangeAction, changeCount > 0 ? { nextChange() } : nil)
-            .focusedSceneValue(\.previousChangeAction, changeCount > 0 ? { previousChange() } : nil)
             .focusedSceneValue(\.findAction, { showSearch() })
             .focusedSceneValue(\.findNextAction, isSearchVisible ? { findNext() } : nil)
             .focusedSceneValue(\.findPreviousAction, isSearchVisible ? { findPrevious() } : nil)
@@ -65,46 +59,9 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
-    private var diffBar: some View {
-        if diff.baseline.isShowingChanges {
-            DiffBarView(
-                baseline: diff.baseline,
-                state: diff.state,
-                changeCount: changeCount,
-                currentChange: currentChange,
-                onNextChange: nextChange,
-                onPreviousChange: previousChange,
-                onGrantAccess: {
-                    guard let fileURL else { return }
-                    diff.requestAccess(for: fileURL, text: document.text)
-                },
-                onDismiss: { selectBaseline(.off) }
-            )
-        }
-    }
-
-    /* private var diffMenu: some View { */
-    /*     Menu { */
-    /*         Picker("Compare With", selection: baselineBinding) { */
-    /*             ForEach(DiffBaseline.allCases) { baseline in */
-    /*                 Text(baseline.label).tag(baseline) */
-    /*             } */
-    /*         } */
-    /*         .pickerStyle(.inline) */
-    /*     } label: { */
-    /*         Label( */
-    /*             "Show Changes", */
-    /*             systemImage: diff.baseline.isShowingChanges ? "plusminus.circle.fill" : "plusminus.circle" */
-    /*         ) */
-    /*     } */
-    /*     .help("Show changes against Git") */
-    /* } */
-
     private var innerBody: some View {
         VStack(spacing: 0) {
             findBar
-            diffBar
             HSplitView {
                 if showEditor {
                     editorPane
@@ -305,27 +262,6 @@ struct ContentView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
     }
 
-    // MARK: - Showing Changes
-
-    private var baselineBinding: Binding<DiffBaseline> {
-        Binding(
-            get: { diff.baseline },
-            set: { selectBaseline($0) }
-        )
-    }
-
-    private func selectBaseline(_ baseline: DiffBaseline) {
-        diff.select(baseline, for: fileURL, text: document.text)
-    }
-
-    private func nextChange() {
-        changeRevision += 1
-    }
-
-    private func previousChange() {
-        changeRevision -= 1
-    }
-
     /// Following the editor only makes sense while the preview is showing the
     /// editor's own text — comparing two stored revisions puts a document on
     /// screen that the cursor has no position in.
@@ -426,30 +362,6 @@ struct ContentView: View {
 
 // MARK: - Focused Values for Menu Commands
 
-/// Lets the View menu drive the focused window's comparison, and show which one
-/// it is already on.
-struct DiffCommand {
-    var current: DiffBaseline
-    var select: (DiffBaseline) -> Void
-}
-
-private struct DiffCommandKey: FocusedValueKey {
-    typealias Value = DiffCommand
-}
-
-private struct NextChangeActionKey: FocusedValueKey {
-    typealias Value = () -> Void
-}
-
-private struct PreviousChangeActionKey: FocusedValueKey {
-    typealias Value = () -> Void
-}
-
-
-
-
-
-
 private struct ZoomInActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
@@ -483,21 +395,6 @@ private struct ShowReplaceActionKey: FocusedValueKey {
 }
 
 extension FocusedValues {
-    var diffCommand: DiffCommand? {
-        get { self[DiffCommandKey.self] }
-        set { self[DiffCommandKey.self] = newValue }
-    }
-
-    var nextChangeAction: (() -> Void)? {
-        get { self[NextChangeActionKey.self] }
-        set { self[NextChangeActionKey.self] = newValue }
-    }
-
-    var previousChangeAction: (() -> Void)? {
-        get { self[PreviousChangeActionKey.self] }
-        set { self[PreviousChangeActionKey.self] = newValue }
-    }
-
 
     var zoomInAction: (() -> Void)? {
         get { self[ZoomInActionKey.self] }
