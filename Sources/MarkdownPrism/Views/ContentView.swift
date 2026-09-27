@@ -14,7 +14,7 @@ struct ContentView: View {
     @State private var fileWatcher: FileWatcher?
     @State private var showEditor = false
     @State private var tocItems: [TOCItem] = []
-    @State private var showTOC = true
+    /* @State private var showTOC = true */
     @State private var selectedTOCItem: String?
     @State private var pendingScrollToID: String?
     @State private var debounceWork: DispatchWorkItem?
@@ -32,6 +32,7 @@ struct ContentView: View {
     @State private var changeRevision = 0
     @State private var changeCount = 0
     @State private var currentChange = 0
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
         innerBody
@@ -63,33 +64,35 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
+    /* @ViewBuilder */
     private var tocSidebar: some View {
-        if showTOC && !tocItems.isEmpty {
-            List(selection: $selectedTOCItem) {
-                ForEach(tocItems) { item in
-                    Text(item.text)
-                        .font(.system(size: 13, weight: item.level == 1 ? .semibold : .regular))
-                        .padding(.leading, CGFloat((item.level - 1) * 12))
-                        .tag(item.id)
-                }
+        List(selection: $selectedTOCItem) {
+            ForEach(tocItems) { item in
+                Text(item.text)
+                    .font(.system(size: 13, weight: item.level == 1 ? .semibold : .regular))
+                    .padding(.leading, CGFloat((item.level - 1) * 12))
+                    .tag(item.id)
             }
-            .listStyle(.sidebar)
-            .frame(minWidth: 160, idealWidth: 200, maxWidth: 280)
         }
+        .listStyle(.sidebar)
+        .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 280)
     }
+
     private var innerBody: some View {
-        VStack(spacing: 0) {
-            findBar
-            HSplitView {
-                tocSidebar
-                if showEditor {
-                    editorPane
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            tocSidebar
+        } detail: {
+            VStack(spacing: 0) {
+                findBar
+                HSplitView {
+                    if showEditor {
+                        editorPane
+                    }
+                    previewPane
                 }
-                previewPane
             }
         }
-        .frame(minWidth: 900, minHeight: 600)
+    .frame(minWidth: 900, minHeight: 600)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button(action: { showEditor.toggle() }) {
@@ -102,9 +105,11 @@ struct ContentView: View {
                 .keyboardShortcut("e", modifiers: [.command, .shift])
             }
             ToolbarItem(placement: .automatic) {
-                Button(action: { showTOC.toggle() }) {
+                Button(action: {
+                    columnVisibility = (columnVisibility == .detailOnly) ? .all : .detailOnly
+                }) {
                     Label(
-                        showTOC ? "Hide Outline" : "Show Outline",
+                        columnVisibility == .detailOnly ? "Show Outline" : "Hide Outline",
                         systemImage: "list.bullet.indent"
                     )
                 }
