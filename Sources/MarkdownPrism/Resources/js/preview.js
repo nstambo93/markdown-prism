@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var mermaidCache = new Map();
   var lastMarkdown = '';
+  var latexEnabled = true;
   // The version being compared against, or null when the page is not showing
   // changes, so a theme change redraws whichever of the two is on screen.
   var lastBaseline = null;
@@ -166,9 +167,12 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function renderMath() {
-    if (!window.renderMathInElement) {
-      return;
-    }
+  if (!latexEnabled) {
+    return;
+  }
+  if (!window.renderMathInElement) {
+    return;
+  }
     window.renderMathInElement(document.getElementById('content'), {
       delimiters: [
         { left: '$$', right: '$$', display: true },
@@ -266,6 +270,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.renderMarkdown = renderMarkdown;
   window.renderDiff = renderDiff;
+
+  window.setLatexEnabled = function (enabled) {
+    var next = enabled === true;
+    if (latexEnabled === next) { return; }
+    latexEnabled = next;
+    // KaTeX replaces $…$ text nodes in place, so the only way to undo a
+    // rendered formula is a fresh parse of the source.
+    if (lastBaseline === null) {
+      renderMarkdown(lastMarkdown);
+    } else {
+      renderDiff(lastBaseline, lastMarkdown);
+    }
+  };
+
   renderMarkdown('');
 
   // --- Scroll sync ---

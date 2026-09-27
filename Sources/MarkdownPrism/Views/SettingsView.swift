@@ -9,6 +9,8 @@ struct SettingsView: View {
                 .tabItem { Label("Appearance", systemImage: "circle.lefthalf.filled") }
             FontSettings(settings: settings)
                 .tabItem { Label("Fonts", systemImage: "textformat") }
+            RenderingSettings(settings: settings)
+                .tabItem { Label("Rendering", systemImage: "doc.richtext") }
         }
         .frame(width: 460)
     }
@@ -105,3 +107,21 @@ private struct FontSettings: View {
         }
     }
 }
+
+private struct RenderingSettings: View {
+    @ObservedObject var settings: AppSettings
+
+    var body: some View {
+        Form {
+            Section("Math") {
+                Toggle("Render LaTeX (KaTeX)", isOn: $settings.latexEnabled)
+                Text("When on, $...$ and $$...$$ are typeset as math. Turn off for notes where dollar signs mean currency.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+

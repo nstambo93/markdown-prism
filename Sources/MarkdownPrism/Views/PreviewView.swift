@@ -11,6 +11,7 @@ struct PreviewView: NSViewRepresentable {
     let searchRevision: Int
     let isRegex: Bool
     let useFullWidth: Bool
+    let latexEnabled: Bool
     let fontStack: String
     let fontSize: CGFloat
     let scrollSync: ScrollSyncBus
@@ -41,6 +42,7 @@ struct PreviewView: NSViewRepresentable {
         context.coordinator.pendingSearchRevision = searchRevision
         context.coordinator.pendingIsRegex = isRegex
         context.coordinator.pendingFullWidth = useFullWidth
+        context.coordinator.pendingLatexEnabled = latexEnabled
         context.coordinator.pendingTypography = Typography(stack: fontStack, size: fontSize)
         context.coordinator.fileURL = fileURL
         context.coordinator.onOpenFile = onOpenFile
@@ -81,6 +83,7 @@ struct PreviewView: NSViewRepresentable {
         c.pendingSearchRevision = searchRevision
         c.pendingIsRegex = isRegex
         c.pendingFullWidth = useFullWidth
+        c.pendingLatexEnabled = latexEnabled
         c.pendingTypography = Typography(stack: fontStack, size: fontSize)
         c.pendingChangeRevision = changeRevision
         c.fileURL = fileURL
@@ -108,6 +111,8 @@ struct PreviewView: NSViewRepresentable {
         var pendingTypography = Typography(stack: "", size: 16)
         private var appliedTypography: Typography?
         private var appliedFullWidth: Bool?
+        var pendingLatexEnabled = true
+        private var appliedLatexEnabled: Bool?
         private var appliedSearchText: String?
         private var appliedSearchRevision = 0
         private var appliedIsRegex = false
@@ -172,6 +177,7 @@ struct PreviewView: NSViewRepresentable {
             guard isLoaded else { return }
             applyZoomIfNeeded()
             applyFullWidthIfNeeded()
+            applyLatexIfNeeded()
             applyTypographyIfNeeded()
             let didRender = renderIfNeeded()
             if didRender {
@@ -208,6 +214,13 @@ struct PreviewView: NSViewRepresentable {
             guard pendingFullWidth != appliedFullWidth else { return }
             appliedFullWidth = pendingFullWidth
             webView.evaluateJavaScript("window.setFullWidth(\(pendingFullWidth));") { _, _ in }
+        }
+
+        private func applyLatexIfNeeded() {
+            guard let webView else { return }
+            guard pendingLatexEnabled != appliedLatexEnabled else { return }
+            appliedLatexEnabled = pendingLatexEnabled
+            webView.evaluateJavaScript("window.setLatexEnabled(\(pendingLatexEnabled));") { _, _ in }
         }
 
         private func applyTypographyIfNeeded() {

@@ -186,6 +186,7 @@ struct ContentView: View {
             searchRevision: searchRevision,
             isRegex: isRegex,
             useFullWidth: useFullWidth,
+            latexEnabled: settings.latexEnabled,
             fontStack: settings.previewFontStack,
             fontSize: settings.previewFontSize,
             scrollSync: scrollSync,

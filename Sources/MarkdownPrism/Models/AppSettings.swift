@@ -46,11 +46,13 @@ final class AppSettings: ObservableObject {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        defaults.register(defaults: [Key.latexEnabled: true])
         appearance = Appearance(rawValue: defaults.string(forKey: Key.appearance) ?? "") ?? .system
         editorFontName = defaults.string(forKey: Key.editorFontName) ?? Self.systemFontName
         editorFontSize = Self.clampSize(CGFloat(defaults.double(forKey: Key.editorFontSize)), default: 14)
         previewFontName = defaults.string(forKey: Key.previewFontName) ?? Self.systemFontName
         previewFontSize = Self.clampSize(CGFloat(defaults.double(forKey: Key.previewFontSize)), default: 16)
+        latexEnabled = defaults.bool(forKey: Key.latexEnabled)
     }
 
     private enum Key {
@@ -59,6 +61,7 @@ final class AppSettings: ObservableObject {
         static let editorFontSize = "editorFontSize"
         static let previewFontName = "previewFontName"
         static let previewFontSize = "previewFontSize"
+        static let latexEnabled = "latexEnabled"
     }
 
     @Published var appearance: Appearance {
@@ -66,6 +69,10 @@ final class AppSettings: ObservableObject {
             defaults.set(appearance.rawValue, forKey: Key.appearance)
             applyAppearance()
         }
+    }
+
+    @Published var latexEnabled: Bool {
+        didSet { defaults.set(latexEnabled, forKey: Key.latexEnabled) }
     }
 
     @Published var editorFontName: String {
@@ -114,6 +121,7 @@ final class AppSettings: ObservableObject {
         editorFontSize = 14
         previewFontName = Self.systemFontName
         previewFontSize = 16
+        latexEnabled = true
     }
 
     /// The CSS `font-family` value for the preview: a chosen face first, then
