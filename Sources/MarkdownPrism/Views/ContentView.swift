@@ -78,7 +78,7 @@ struct ContentView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 280)
+        .navigationSplitViewColumnWidth(min: 140, ideal: 200, max: 280)
     }
 
     private var innerBody: some View {
@@ -95,7 +95,7 @@ struct ContentView: View {
                 }
             }
         }
-    .frame(minWidth: 900, minHeight: 600)
+    .frame(minWidth: 420, minHeight: 320)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button(action: { showEditor.toggle() }) {
@@ -184,7 +184,7 @@ struct ContentView: View {
             scrollSync: scrollSync,
             onEscapePressed: isSearchVisible ? dismissSearch : nil
         )
-        .frame(minWidth: 300)
+        .frame(minWidth: 200)
     }
 
     /// What the preview renders. Comparing two stored revisions puts the later
@@ -232,7 +232,7 @@ struct ContentView: View {
             },
             pendingScrollToID: pendingScrollToID
         )
-        .frame(minWidth: 300)
+        .frame(minWidth: 200)
     }
 
     private func zoomIn() {

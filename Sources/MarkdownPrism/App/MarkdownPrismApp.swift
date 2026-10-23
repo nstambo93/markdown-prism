@@ -71,6 +71,7 @@ struct MarkdownPrismApp: App {
             }
             EditorCommands()
         }
+        .defaultSize(width: 900, height: 700)
 
         Settings {
             SettingsView(settings: AppSettings.shared)
