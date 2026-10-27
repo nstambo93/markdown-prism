@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
     html: true,
     linkify: true,
     typographer: true,
-    breaks: false,
+    breaks: true,
     highlight: function (str, lang) {
       if (lang && window.hljs && hljs.getLanguage(lang)) {
         try { return hljs.highlight(str, { language: lang }).value; } catch (_) {}

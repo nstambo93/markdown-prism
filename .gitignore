@@ -26,3 +26,6 @@ Package.resolved
 *.idea/
 *.vscode/
 .vercel
+
+# Local
+build-commands.sh
