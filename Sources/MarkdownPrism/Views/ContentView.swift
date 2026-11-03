@@ -184,7 +184,8 @@ struct ContentView: View {
             scrollSync: scrollSync,
             onEscapePressed: isSearchVisible ? dismissSearch : nil
         )
-        .frame(minWidth: 200)
+        .frame(minWidth: 200, idealWidth: 400, maxWidth: 800)
+        .layoutPriority(1)
     }
 
     /// What the preview renders. Comparing two stored revisions puts the later
