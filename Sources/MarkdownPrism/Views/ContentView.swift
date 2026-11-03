@@ -184,7 +184,7 @@ struct ContentView: View {
             scrollSync: scrollSync,
             onEscapePressed: isSearchVisible ? dismissSearch : nil
         )
-        .frame(minWidth: 200, idealWidth: 400, maxWidth: 800)
+        .frame(minWidth: 200, idealWidth: 400, maxWidth: 700)
         .layoutPriority(1)
     }
 
