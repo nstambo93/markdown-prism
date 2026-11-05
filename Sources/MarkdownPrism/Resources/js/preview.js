@@ -293,6 +293,42 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 
+  // --- Scroll Anchor on Resize ---
+  // Keeps the top-most visible heading anchored when the window/pane resizes.
+
+  var topHeadingId = null;
+  var scrollTimer;
+
+  // 1. Track the top-most heading as the user scrolls
+  window.addEventListener('scroll', function() {
+    if (scrollTimer) return;
+    scrollTimer = setTimeout(function() {
+      scrollTimer = null;
+      var headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
+      for (var i = 0; i < headings.length; i++) {
+        var rect = headings[i].getBoundingClientRect();
+        // 50px buffer to account for padding at the top of the view
+        if (rect.top <= 50) {
+          topHeadingId = headings[i].id;
+        } else {
+          break;
+        }
+      }
+    }, 100);
+  }, { passive: true });
+
+  // 2. Restore the heading to the top when the pane resizes
+  window.addEventListener('resize', function() {
+    if (topHeadingId) {
+      var el = document.getElementById(topHeadingId);
+      if (el) {
+        // Remove the 150ms delay entirely. 
+        // 'instant' locks it in place on every frame the window resizes.
+        el.scrollIntoView({ behavior: 'instant', block: 'start' });
+      }
+    }
+  }, { passive: true });
+
   // Expose it alongside your other window functions
   window.getTOC = extractTOC;
 
