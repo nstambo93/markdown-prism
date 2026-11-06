@@ -70,6 +70,20 @@ struct MarkdownPrismApp: App {
                 }
             }
             EditorCommands()
+
+            CommandGroup(replacing: .importExport) {
+                Menu("Export To") {
+                    Button(ExportFormat.pdf.displayName) {
+                        NotificationCenter.default.post(name: .exportPDFRequested, object: nil)
+                    }
+                    Button(ExportFormat.docx.displayName) {
+                        NotificationCenter.default.post(name: .exportDOCXRequested, object: nil)
+                    }
+                    Button(ExportFormat.rtf.displayName) {
+                        NotificationCenter.default.post(name: .exportRTFRequested, object: nil)
+                    }
+                }
+            }
         }
         .defaultSize(width: 900, height: 700)
 
