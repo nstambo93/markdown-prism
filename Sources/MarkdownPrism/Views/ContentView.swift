@@ -80,7 +80,6 @@ struct ContentView: View {
                 }
             }
             .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 140, ideal: 200, max: 280)
             .onChange(of: selectedTOCItem) { _, newValue in
                 if isTOCScrollFromPreview, let id = newValue {
                     withAnimation {
@@ -89,6 +88,8 @@ struct ContentView: View {
                 }
             }
         }
+        // Move the modifier here, outside the ScrollViewReader:
+        .navigationSplitViewColumnWidth(min: 140, ideal: 200, max: 280)
     }
 
     private var innerBody: some View {
@@ -168,6 +169,15 @@ struct ContentView: View {
         }
         .onChange(of: document.text) {
             schedulePreviewUpdate(document.text)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .exportPDFRequested)) { _ in
+            presentExportPanel(for: .pdf)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .exportDOCXRequested)) { _ in
+            presentExportPanel(for: .docx)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .exportRTFRequested)) { _ in
+            presentExportPanel(for: .rtf)
         }
         .focusedSceneValue(\.zoomInAction, zoomState.canZoomIn ? { zoomIn() } : nil)
         .focusedSceneValue(\.zoomOutAction, zoomState.canZoomOut ? { zoomOut() } : nil)
@@ -412,6 +422,50 @@ struct ContentView: View {
         }
 
         return true
+    }
+
+    private func presentExportPanel(for format: ExportFormat) {
+        let panel = NSSavePanel()
+        panel.title = "Export Document"
+        panel.allowedContentTypes = [format.utType]
+
+        let currentName = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
+        panel.nameFieldStringValue = "\(currentName).\(format.rawValue)"
+
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+
+            switch format {
+            case .pdf:
+                // Tell the PreviewView to handle the native print
+                NotificationCenter.default.post(name: .performPDFExport, object: url)
+
+            case .docx:
+                DocumentExporter.shared.exportToDocx(markdown: document.text, destinationURL: url) { result in
+                    handleExportResult(result)
+                }
+
+            case .rtf:
+                DocumentExporter.shared.exportToRtf(markdown: document.text, destinationURL: url) { result in
+                    handleExportResult(result)
+                }
+            }
+        }
+    }
+
+    private func handleExportResult(_ result: Result<URL, Error>) {
+        DispatchQueue.main.async {
+            switch result {
+            case .success(let url):
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            case .failure(let error):
+                let alert = NSAlert()
+                alert.messageText = "Export Failed"
+                alert.informativeText = error.localizedDescription
+                alert.alertStyle = .critical
+                alert.runModal()
+            }
+        }
     }
 }
 

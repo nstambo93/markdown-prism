@@ -1,5 +1,6 @@
 import SwiftUI
 import WebKit
+import Combine
 
 struct TOCItem: Identifiable {
     let id: String
@@ -63,6 +64,37 @@ struct PreviewView: NSViewRepresentable {
         context.coordinator.onTOCReceived = onTOCReceived
         context.coordinator.pendingScrollToID = pendingScrollToID
         context.coordinator.onActiveHeadingChanged = onActiveHeadingChanged
+        // PDF Export
+        context.coordinator.pdfExportCancellable = NotificationCenter.default
+            .publisher(for: .performPDFExport)
+            .sink { [weak webView] notification in
+                guard let url = notification.object as? URL,
+                      let webView = webView else { return }
+
+                // We use macOS's native Print pipeline
+                let printInfo = NSPrintInfo.shared.copy() as! NSPrintInfo
+                printInfo.jobDisposition = .save
+                printInfo.dictionary()[NSPrintInfo.AttributeKey.jobSavingURL] = url
+
+                // Set standard Letter margins (adjust as needed for your CSS)
+                printInfo.paperSize = NSSize(width: 612, height: 792)
+                printInfo.topMargin = 36.0
+                printInfo.bottomMargin = 36.0
+                printInfo.leftMargin = 36.0
+                printInfo.rightMargin = 36.0
+                printInfo.horizontalPagination = .fit
+                printInfo.verticalPagination = .automatic
+
+                let printOp = webView.printOperation(with: printInfo)
+                printOp.showsPrintPanel = false
+                printOp.showsProgressPanel = false
+
+                if let window = webView.window {
+                    printOp.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
+                } else {
+                    printOp.run()
+                }
+            }
 
         let templateURL: URL? = {
             #if SWIFT_PACKAGE
@@ -142,6 +174,7 @@ struct PreviewView: NSViewRepresentable {
         private var appliedChangeRevision = 0
         private weak var scrollSync: ScrollSyncBus?
         var onActiveHeadingChanged: ((String) -> Void)? // Scrollspy
+        var pdfExportCancellable: AnyCancellable?
 
         func bind(to scrollSync: ScrollSyncBus) {
             self.scrollSync = scrollSync
