@@ -30,6 +30,7 @@ struct PreviewView: NSViewRepresentable {
     var onChangesCounted: ((Int, Int) -> Void)?
     var onTOCReceived: (([TOCItem]) -> Void)?
     var pendingScrollToID: String?
+    var onActiveHeadingChanged: ((String) -> Void)? // Scrollspy
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -40,6 +41,7 @@ struct PreviewView: NSViewRepresentable {
         let handler = WeakScriptMessageHandler(delegate: context.coordinator)
         config.userContentController.add(handler, name: "linkClicked")
         config.userContentController.add(handler, name: "previewScrolled")
+        config.userContentController.add(handler, name: "activeHeadingChanged")
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.pageZoom = zoomScale
@@ -60,6 +62,7 @@ struct PreviewView: NSViewRepresentable {
         context.coordinator.bind(to: scrollSync)
         context.coordinator.onTOCReceived = onTOCReceived
         context.coordinator.pendingScrollToID = pendingScrollToID
+        context.coordinator.onActiveHeadingChanged = onActiveHeadingChanged
 
         let templateURL: URL? = {
             #if SWIFT_PACKAGE
@@ -105,6 +108,7 @@ struct PreviewView: NSViewRepresentable {
         if c.isLoaded {
             c.sync()
         }
+        c.onActiveHeadingChanged = onActiveHeadingChanged
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
@@ -137,6 +141,7 @@ struct PreviewView: NSViewRepresentable {
         var pendingChangeRevision = 0
         private var appliedChangeRevision = 0
         private weak var scrollSync: ScrollSyncBus?
+        var onActiveHeadingChanged: ((String) -> Void)? // Scrollspy
 
         func bind(to scrollSync: ScrollSyncBus) {
             self.scrollSync = scrollSync
@@ -182,6 +187,11 @@ struct PreviewView: NSViewRepresentable {
             case "previewScrolled":
                 guard let line = message.body as? NSNumber else { return }
                 scrollSync?.previewDidScroll(toLine: line.intValue)
+            case "activeHeadingChanged":
+                guard let id = message.body as? String else { return }
+                DispatchQueue.main.async {
+                    self.onActiveHeadingChanged?(id)
+                }
             default:
                 break
             }

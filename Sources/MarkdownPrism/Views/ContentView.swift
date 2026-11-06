@@ -33,6 +33,7 @@ struct ContentView: View {
     @State private var changeCount = 0
     @State private var currentChange = 0
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var isTOCScrollFromPreview = false
 
     var body: some View {
         innerBody
@@ -69,16 +70,25 @@ struct ContentView: View {
 
     /* @ViewBuilder */
     private var tocSidebar: some View {
-        List(selection: $selectedTOCItem) {
-            ForEach(tocItems) { item in
-                Text(item.text)
-                    .font(.system(size: 13, weight: item.level == 1 ? .semibold : .regular))
-                    .padding(.leading, CGFloat((item.level - 1) * 12))
-                    .tag(item.id)
+        ScrollViewReader { proxy in
+            List(selection: $selectedTOCItem) {
+                ForEach(tocItems) { item in
+                    Text(item.text)
+                        .font(.system(size: 13, weight: item.level == 1 ? .semibold : .regular))
+                        .padding(.leading, CGFloat((item.level - 1) * 12))
+                        .tag(item.id)
+                }
+            }
+            .listStyle(.sidebar)
+            .navigationSplitViewColumnWidth(min: 140, ideal: 200, max: 280)
+            .onChange(of: selectedTOCItem) { _, newValue in
+                if isTOCScrollFromPreview, let id = newValue {
+                    withAnimation {
+                        proxy.scrollTo(id, anchor: .center)
+                    }
+                }
             }
         }
-        .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: 140, ideal: 200, max: 280)
     }
 
     private var innerBody: some View {
@@ -145,7 +155,9 @@ struct ContentView: View {
             updateScrollSyncEnabled()
         }
         .onChange(of: selectedTOCItem) { _, newValue in
-            pendingScrollToID = newValue
+            if !isTOCScrollFromPreview {
+                pendingScrollToID = newValue
+            }
         }
         .onChange(of: diff.state) {
             updateScrollSyncEnabled()
@@ -231,7 +243,18 @@ struct ContentView: View {
             onTOCReceived: { items in
                 tocItems = items
             },
-            pendingScrollToID: pendingScrollToID
+            pendingScrollToID: pendingScrollToID,
+            onActiveHeadingChanged: { activeId in
+                guard activeId != selectedTOCItem else { return }
+                isTOCScrollFromPreview = true
+                withAnimation {
+                    selectedTOCItem = activeId
+                }
+                // Reset the flag after a brief delay to let the UI settle
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isTOCScrollFromPreview = false
+                }
+            }
         )
         .frame(minWidth: 200)
     }

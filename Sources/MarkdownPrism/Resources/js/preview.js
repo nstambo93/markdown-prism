@@ -348,6 +348,40 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 
+  // Scrollspy
+  var lastActiveHeadingId = null;
+  var scrollTimeout;
+
+  window.addEventListener('scroll', function() {
+    if (scrollTimeout) return;
+
+    // Throttle to prevent spamming Swift on every single pixel scrolled
+    scrollTimeout = setTimeout(function() {
+      scrollTimeout = null;
+      var headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
+      if (headings.length === 0) return;
+
+      var currentId = headings[0].id; // Default to first heading
+      var offset = 100; // Pixels from the top of the screen to consider "active"
+
+      for (var i = 0; i < headings.length; i++) {
+        var rect = headings[i].getBoundingClientRect();
+        if (rect.top <= offset) {
+          currentId = headings[i].id;
+        } else {
+          break; // Headings are ordered, so we can stop checking
+        }
+      }
+
+      if (currentId !== lastActiveHeadingId) {
+        lastActiveHeadingId = currentId;
+        if (window.webkit && window.webkit.messageHandlers.activeHeadingChanged) {
+          window.webkit.messageHandlers.activeHeadingChanged.postMessage(currentId);
+        }
+      }
+    }, 100); // 100ms throttle
+  }, { passive: true });
+
   renderMarkdown('');
 
   // --- Scroll sync ---
