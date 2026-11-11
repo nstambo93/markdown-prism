@@ -89,7 +89,7 @@ struct ContentView: View {
             }
         }
         // Move the modifier here, outside the ScrollViewReader:
-        .navigationSplitViewColumnWidth(min: 140, ideal: 200, max: 280)
+        .navigationSplitViewColumnWidth(min: 140, ideal: 200, max: 400)
     }
 
     private var innerBody: some View {
